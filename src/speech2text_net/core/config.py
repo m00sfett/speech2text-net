@@ -38,6 +38,8 @@ class AppConfig:
     output_dir: Path
     model_dir: Path
     log_file: Path
+    client_log_file: Path | None
+    server_log_file: Path | None
 
     title_model: str
     title_maxlen: int
@@ -49,6 +51,8 @@ class AppConfig:
     quiet: bool
     enable_clipboard: bool
     autodetect_local_server: bool
+    record_backend: str
+    record_device: str
 
     server_host: str
     server_port: int
@@ -144,6 +148,8 @@ def load_config_file(path: Path) -> dict[str, str]:
         "OUT_DIR",
         "MODEL_DIR",
         "LOG_FILE",
+        "CLIENT_LOG_FILE",
+        "SERVER_LOG_FILE",
         "TITLE_MODEL",
         "TITLE_MAXLEN",
         "AUTO_TITLE",
@@ -153,6 +159,8 @@ def load_config_file(path: Path) -> dict[str, str]:
         "QUIET",
         "ENABLE_CLIPBOARD",
         "AUTO_DETECT_LOCAL_SERVER",
+        "RECORD_BACKEND",
+        "RECORD_DEVICE",
         "SERVER_HOST",
         "SERVER_PORT",
         "SERVER_URL",
@@ -199,8 +207,12 @@ def cli_overrides_from_namespace(args: Any) -> dict[str, Any]:
         "out_dir": "OUT_DIR",
         "model_dir": "MODEL_DIR",
         "log_file": "LOG_FILE",
+        "client_log_file": "CLIENT_LOG_FILE",
+        "server_log_file": "SERVER_LOG_FILE",
         "title_model": "TITLE_MODEL",
         "title_maxlen": "TITLE_MAXLEN",
+        "record_backend": "RECORD_BACKEND",
+        "record_device": "RECORD_DEVICE",
         "server_host": "SERVER_HOST",
         "server_port": "SERVER_PORT",
         "server_url": "SERVER_URL",
@@ -268,6 +280,8 @@ def build_config(
         "OUT_DIR": "output",
         "MODEL_DIR": "models",
         "LOG_FILE": "speech2text-net.log",
+        "CLIENT_LOG_FILE": "",
+        "SERVER_LOG_FILE": "",
         "TITLE_MODEL": "",
         "TITLE_MAXLEN": "40",
         "AUTO_TITLE": "1",
@@ -277,6 +291,8 @@ def build_config(
         "QUIET": "0",
         "ENABLE_CLIPBOARD": "1",
         "AUTO_DETECT_LOCAL_SERVER": "1",
+        "RECORD_BACKEND": "auto",
+        "RECORD_DEVICE": "",
         "SERVER_HOST": "127.0.0.1",
         "SERVER_PORT": "8765",
         "SERVER_URL": "http://127.0.0.1:8765",
@@ -308,6 +324,9 @@ def build_config(
             effective_token = file_token
             token_source = "file"
 
+    client_log_file_raw = str(pick("CLIENT_LOG_FILE")).strip()
+    server_log_file_raw = str(pick("SERVER_LOG_FILE")).strip()
+
     return AppConfig(
         project_root=root,
         config_file=resolved_config_path,
@@ -319,6 +338,8 @@ def build_config(
         output_dir=resolve_path(str(pick("OUT_DIR")), base_dir=config_base_dir),
         model_dir=resolve_path(str(pick("MODEL_DIR")), base_dir=config_base_dir),
         log_file=resolve_path(str(pick("LOG_FILE")), base_dir=config_base_dir),
+        client_log_file=resolve_path(client_log_file_raw, base_dir=config_base_dir) if client_log_file_raw else None,
+        server_log_file=resolve_path(server_log_file_raw, base_dir=config_base_dir) if server_log_file_raw else None,
         title_model=str(pick("TITLE_MODEL")),
         title_maxlen=parse_int(pick("TITLE_MAXLEN"), 40),
         auto_title=parse_bool(pick("AUTO_TITLE"), True),
@@ -328,6 +349,8 @@ def build_config(
         quiet=parse_bool(pick("QUIET"), False),
         enable_clipboard=parse_bool(pick("ENABLE_CLIPBOARD"), True),
         autodetect_local_server=parse_bool(pick("AUTO_DETECT_LOCAL_SERVER"), True),
+        record_backend=str(pick("RECORD_BACKEND")).strip().lower() or "auto",
+        record_device=str(pick("RECORD_DEVICE")).strip(),
         server_host=str(pick("SERVER_HOST")),
         server_port=parse_int(pick("SERVER_PORT"), 8765),
         server_url=str(pick("SERVER_URL")),

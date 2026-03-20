@@ -3,7 +3,7 @@
 Network-capable successor project for `speech2text`.
 
 ## Status
-- Working version: `0.7.0`
+- Working version: `0.8.0`
 - Public-repo preparation in progress
 - Local reference project remains untouched in `~/speech2text`
 - One shared Python codebase for client and server roles
@@ -58,6 +58,11 @@ Value precedence remains:
 
 Relative paths inside a config file are resolved against the directory of that config file.
 
+Useful advanced options:
+- `CLIENT_LOG_FILE` / `SERVER_LOG_FILE` for separated logs in combined setups
+- `RECORD_BACKEND=auto|parecord|pw-record|arecord`
+- `RECORD_DEVICE=` to override the backend-specific input source/device
+
 ## Quick Start From A Git Checkout
 Development-style invocation:
 
@@ -110,6 +115,8 @@ Public-safe example configs are included in:
 ## Current Capabilities
 - `client` can upload a WAV file to a reachable server
 - `client` can record locally when no WAV is given, then upload that recording
+- the client now prefers Pulse/PipeWire recording backends over raw ALSA when available
+- clearly silent recordings are detected before upload to avoid repeated Whisper hallucinations
 - `client` copies the returned transcript to the local clipboard when enabled
 - `client` supports media handling modes during recording:
   - default: pause + mute where possible

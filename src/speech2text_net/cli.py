@@ -35,8 +35,12 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--out-dir", help="Output directory for generated artifacts.")
     parser.add_argument("--model-dir", help="Directory containing Whisper model files.")
     parser.add_argument("--log-file", help="Log file path.")
+    parser.add_argument("--client-log-file", help="Client log file path.")
+    parser.add_argument("--server-log-file", help="Server log file path.")
     parser.add_argument("--title-model", help="Preferred Ollama model for title generation.")
     parser.add_argument("--title-maxlen", type=int, help="Maximum title slug length.")
+    parser.add_argument("--record-backend", help="Recording backend: auto, parecord, pw-record, arecord.")
+    parser.add_argument("--record-device", help="Recording device/source override for the selected backend.")
     parser.add_argument("--server-url", help="Remote server URL for the client.")
     parser.add_argument("--server-host", help="Bind host for the local server.")
     parser.add_argument("--server-port", type=int, help="Bind port for the local server.")
@@ -59,9 +63,17 @@ def build_parser() -> argparse.ArgumentParser:
     return parser
 
 
-def create_logger(config: AppConfig) -> Logger:
+def active_log_file_for_role(config: AppConfig, role: str | None) -> Path:
+    if role == "client" and config.client_log_file is not None:
+        return config.client_log_file
+    if role == "server" and config.server_log_file is not None:
+        return config.server_log_file
+    return config.log_file
+
+
+def create_logger(config: AppConfig, role: str | None) -> Logger:
     return Logger(
-        log_file=config.log_file,
+        log_file=active_log_file_for_role(config, role),
         enable_color=config.enable_color,
         quiet=config.quiet,
         tag="S2T-NET",
@@ -75,7 +87,11 @@ def run_doctor(args: argparse.Namespace, config: AppConfig, logger: Logger) -> i
     logger.line("Config", f"Config found: {'yes' if config.config_found else 'no'}")
     logger.line("Paths", f"Output directory: {config.output_dir}")
     logger.line("Paths", f"Model directory: {config.model_dir}")
-    logger.line("Paths", f"Log file: {config.log_file}")
+    logger.line("Paths", f"Log file: {active_log_file_for_role(config, args.command)}")
+    if config.client_log_file is not None:
+        logger.line("Paths", f"Client log file: {config.client_log_file}")
+    if config.server_log_file is not None:
+        logger.line("Paths", f"Server log file: {config.server_log_file}")
     logger.line("Server", f"URL: {config.server_url}")
     logger.line("Server", f"Bind: {config.server_host}:{config.server_port}")
     logger.line("Auth", f"Token file: {config.api_token_file}")
@@ -88,7 +104,11 @@ def run_doctor(args: argparse.Namespace, config: AppConfig, logger: Logger) -> i
     logger.line("GPU", f"Cleanup script: {config.gpu_cleanup_path}")
     logger.line("Behavior", f"Clipboard enabled: {'yes' if config.enable_clipboard else 'no'}")
     logger.line("Behavior", f"Local autodetect: {'yes' if config.autodetect_local_server else 'no'}")
+    logger.line("Behavior", f"Record backend: {config.record_backend}")
+    logger.line("Behavior", f"Record device: {config.record_device or 'default'}")
     logger.line("Checks", f"whisper: {'yes' if command_exists('whisper') else 'no'}")
+    logger.line("Checks", f"parecord: {'yes' if command_exists('parecord') else 'no'}")
+    logger.line("Checks", f"pw-record: {'yes' if command_exists('pw-record') else 'no'}")
     logger.line("Checks", f"ollama: {'yes' if command_exists('ollama') else 'no'}")
     logger.line("Checks", f"arecord: {'yes' if command_exists('arecord') else 'no'}")
     logger.line("Checks", f"pactl: {'yes' if command_exists('pactl') else 'no'}")
@@ -124,7 +144,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         cli_overrides=cli_overrides_from_namespace(args),
         config_path=Path(args.config).expanduser() if args.config else None,
     )
-    logger = create_logger(config)
+    logger = create_logger(config, args.command)
     try:
         handler = getattr(args, "handler", None)
         if handler is None:

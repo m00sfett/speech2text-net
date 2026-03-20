@@ -85,6 +85,7 @@ write_client_config() {
   cat > "$CONFIG_PATH" <<EOF
 OUT_DIR=~/.local/share/${APP_NAME}/output
 LOG_FILE=~/.local/state/${APP_NAME}/client.log
+CLIENT_LOG_FILE=~/.local/state/${APP_NAME}/client.log
 
 ENABLE_CLIPBOARD=1
 ENABLE_COLOR=1
@@ -92,6 +93,8 @@ QUIET=0
 
 ENABLE_MEDIA_MUTE=1
 MUTE_ONLY=0
+RECORD_BACKEND=auto
+RECORD_DEVICE=
 
 AUTO_DETECT_LOCAL_SERVER=1
 SERVER_URL=${server_url}
@@ -126,6 +129,7 @@ FP16=1
 OUT_DIR=~/.local/share/${APP_NAME}/output
 MODEL_DIR=${model_dir}
 LOG_FILE=~/.local/state/${APP_NAME}/server.log
+SERVER_LOG_FILE=~/.local/state/${APP_NAME}/server.log
 
 TITLE_MODEL=
 TITLE_MAXLEN=40
@@ -167,6 +171,8 @@ FP16=1
 OUT_DIR=~/.local/share/${APP_NAME}/output
 MODEL_DIR=${model_dir}
 LOG_FILE=~/.local/state/${APP_NAME}/${APP_NAME}.log
+CLIENT_LOG_FILE=~/.local/state/${APP_NAME}/client.log
+SERVER_LOG_FILE=~/.local/state/${APP_NAME}/server.log
 
 TITLE_MODEL=
 TITLE_MAXLEN=40
@@ -177,6 +183,8 @@ MUTE_ONLY=0
 ENABLE_COLOR=1
 QUIET=0
 ENABLE_CLIPBOARD=1
+RECORD_BACKEND=auto
+RECORD_DEVICE=
 
 AUTO_DETECT_LOCAL_SERVER=1
 SERVER_HOST=${host}

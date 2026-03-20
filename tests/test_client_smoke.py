@@ -59,6 +59,8 @@ class ClientSmokeTests(unittest.TestCase):
                 start_human="start",
                 stop_human="stop",
                 duration_seconds=3,
+                backend_used="parecord",
+                device_used="@DEFAULT_SOURCE@",
             )
             try:
                 with patch("speech2text_net.client.cli.record_timed", return_value=recording):

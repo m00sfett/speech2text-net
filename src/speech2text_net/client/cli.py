@@ -35,13 +35,13 @@ def _resolve_input_wav(args: argparse.Namespace, config: AppConfig, logger: Logg
     if args.seconds is not None:
         media_state = pause_media_playback(config, logger)
         try:
-            recording = record_timed(config.output_dir, logger, args.seconds)
+            recording = record_timed(config, logger, args.seconds)
         finally:
             resume_media_playback(config, logger, media_state)
     else:
         media_state = pause_media_playback(config, logger)
         try:
-            recording = record_interactive(config.output_dir, logger)
+            recording = record_interactive(config, logger)
         finally:
             resume_media_playback(config, logger, media_state)
     return recording.wav_path, recording
