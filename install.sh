@@ -144,7 +144,18 @@ EOF
 }
 
 write_all_config() {
-  local model_dir clean_mode
+  local bind_mode host model_dir clean_mode token
+  bind_mode="$(prompt 'Bind mode (localhost/tailscale)' 'localhost')"
+  host='127.0.0.1'
+  if [[ "$bind_mode" == "tailscale" ]]; then
+    host="$(prompt 'Tailscale IPv4/hostname to bind' '100.64.0.10')"
+    if [[ ! -f "$TOKEN_FILE" ]]; then
+      token="$(random_token)"
+      printf '%s\n' "$token" > "$TOKEN_FILE"
+      chmod 600 "$TOKEN_FILE"
+      printf 'Created API token file: %s\n' "$TOKEN_FILE"
+    fi
+  fi
   model_dir="$(prompt 'Whisper model directory' '~/whisper-models')"
   clean_mode="$(prompt 'GPU cleanup mode (empty/safe/force)' '')"
   cat > "$CONFIG_PATH" <<EOF
@@ -168,9 +179,9 @@ QUIET=0
 ENABLE_CLIPBOARD=1
 
 AUTO_DETECT_LOCAL_SERVER=1
-SERVER_HOST=127.0.0.1
+SERVER_HOST=${host}
 SERVER_PORT=8765
-SERVER_URL=http://127.0.0.1:8765
+SERVER_URL=http://${host}:8765
 
 API_TOKEN=
 API_TOKEN_FILE=~/.config/${APP_NAME}/.secrets/${APP_NAME}.token
