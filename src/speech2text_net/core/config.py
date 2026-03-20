@@ -14,7 +14,9 @@ def detect_project_root() -> Path:
     for parent in here.parents:
         if (parent / "pyproject.toml").is_file():
             return parent.resolve(strict=False)
-    return Path.cwd().resolve(strict=False)
+    if len(here.parents) > 2:
+        return here.parents[2].resolve(strict=False)
+    return here.parent.resolve(strict=False)
 
 
 PROJECT_ROOT = detect_project_root()
@@ -96,6 +98,10 @@ def default_user_config_dir(env: Mapping[str, str] | None = None) -> Path:
     return (base / APP_NAME).resolve(strict=False)
 
 
+def is_source_checkout(project_root: Path) -> bool:
+    return (project_root / "pyproject.toml").is_file() and (project_root / "src" / "speech2text_net").is_dir()
+
+
 def discover_default_config_path(
     *,
     project_root: Path,
@@ -112,11 +118,16 @@ def discover_default_config_path(
     repo_candidate = project_root / DEFAULT_CONFIG_NAME
     user_candidate = default_user_config_dir(env_map) / DEFAULT_CONFIG_NAME
 
-    for candidate in (cwd_candidate, repo_candidate, user_candidate):
+    if is_source_checkout(project_root):
+        candidates = (cwd_candidate, repo_candidate, user_candidate)
+    else:
+        candidates = (user_candidate, cwd_candidate)
+
+    for candidate in candidates:
         if candidate.is_file():
             return candidate.resolve(strict=False)
 
-    if (project_root / "pyproject.toml").is_file():
+    if is_source_checkout(project_root):
         return repo_candidate.resolve(strict=False)
     return user_candidate.resolve(strict=False)
 

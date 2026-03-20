@@ -100,6 +100,55 @@ class ConfigTests(unittest.TestCase):
             self.assertEqual(cfg.config_file, config_path.resolve())
             self.assertEqual(cfg.device, "cpu")
 
+    def test_installed_mode_prefers_user_config_over_cwd_config(self) -> None:
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            home = root / "home"
+            cwd = root / "work"
+            project_root = root / "site-packages"
+            home.mkdir()
+            cwd.mkdir()
+            project_root.mkdir()
+
+            cwd_config = cwd / "speech2text-net.conf"
+            cwd_config.write_text("DEVICE=cpu\n", encoding="utf-8")
+
+            user_config_dir = home / ".config" / "speech2text-net"
+            user_config_dir.mkdir(parents=True)
+            user_config = user_config_dir / "speech2text-net.conf"
+            user_config.write_text("DEVICE=cuda\n", encoding="utf-8")
+
+            env = {"HOME": str(home)}
+            cfg = build_config(project_root=project_root, env=env, cwd=cwd)
+
+            self.assertEqual(cfg.config_file, user_config.resolve())
+            self.assertEqual(cfg.device, "cuda")
+
+    def test_checkout_mode_prefers_cwd_config(self) -> None:
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            project_root = root / "repo"
+            cwd = project_root / "nested"
+            home = root / "home"
+            (project_root / "src" / "speech2text_net").mkdir(parents=True)
+            (project_root / "pyproject.toml").write_text("[project]\nname='speech2text-net'\n", encoding="utf-8")
+            cwd.mkdir(parents=True)
+            home.mkdir()
+
+            cwd_config = cwd / "speech2text-net.conf"
+            cwd_config.write_text("DEVICE=cpu\n", encoding="utf-8")
+
+            user_config_dir = home / ".config" / "speech2text-net"
+            user_config_dir.mkdir(parents=True)
+            user_config = user_config_dir / "speech2text-net.conf"
+            user_config.write_text("DEVICE=cuda\n", encoding="utf-8")
+
+            env = {"HOME": str(home)}
+            cfg = build_config(project_root=project_root, env=env, cwd=cwd)
+
+            self.assertEqual(cfg.config_file, cwd_config.resolve())
+            self.assertEqual(cfg.device, "cpu")
+
 
 if __name__ == "__main__":
     unittest.main()
