@@ -1,0 +1,16 @@
+__pycache__/
+*.pyc
+.pytest_cache/
+.venv/
+.mypy_cache/
+dist/
+build/
+*.egg-info/
+speech2text-net.log
+speech2text-net.conf
+.secrets/
+project-notes.md
+output/*
+releases/*
+!output/.gitkeep
+!releases/.gitkeep
